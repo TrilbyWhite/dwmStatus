@@ -54,7 +54,7 @@ int main(int argc,char **argv) {
 			100*mfree/mtot,100*mbuff/mtot,100*mcache/mtot);
 		strcat(status,statnext);
 	// Audio volume:
-		audio = fopen("/home/jmcclure/.status_info","r");
+		audio = fopen("/home/USERNAME/.status_info","r");
 		fscanf(audio,"%d",&vol);
 		fclose(audio);
 		if (vol == -1)
