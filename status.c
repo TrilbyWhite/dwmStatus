@@ -37,21 +37,19 @@
 #define BAT_CHRG_STR	"Ü %d%% Ü"					// Battery, when charging (plugged into AC)
 #define DATE_TIME_STR	"Ü %a %b %d ÜÜ Õ %H:%M "	// This is a strftime format string which is passed localtime
 
-int main(int argc,char **argv) {
+int main() {
 	Display *dpy;
 	Window root;
-	int vol,cpu_perc;
+	int num;
 	long jif1,jif2,jif3,jift;
-	long jif1l,jif2l,jif3l,jiftl;
-	long bat_now,bat_full,bat_perc;
-	long mtot,mfree,mbuff,mcache;
-	char statnext[40], status[120];
+	long lnum1,lnum2,lnum3,lnum4;
+	char statnext[30], status[100];
 	time_t current;
-	FILE *audio, *memfile, *cpufile, *batfile;
+	FILE *infile;
 	// get initial jiffies
-	cpufile = fopen(CPU_FILE,"r");
-	fscanf(cpufile,"cpu %ld %ld %ld %ld",&jif1l,&jif2l,&jif3l,&jiftl);
-	fclose(cpufile);
+	infile = fopen(CPU_FILE,"r");
+	fscanf(infile,"cpu %ld %ld %ld %ld",&jif1,&jif2,&jif3,&jift);
+	fclose(infile);
 	// Setup X display and root window id:
 	dpy=XOpenDisplay(NULL);
 	if ( dpy == NULL) {
@@ -63,51 +61,51 @@ int main(int argc,char **argv) {
 	for (;;) {
 		status[0]='\0';
 	// CPU use:
-		cpufile = fopen(CPU_FILE,"r");
-		fscanf(cpufile,"cpu %ld %ld %ld %ld",&jif1,&jif2,&jif3,&jift);
-		fclose(cpufile);
-		if (jift>jiftl)
-			cpu_perc = 100*((jif1-jif1l)+(jif2-jif2l)+(jif3-jif3l))/(jift-jiftl);
+		infile = fopen(CPU_FILE,"r");
+		fscanf(infile,"cpu %ld %ld %ld %ld",&lnum1,&lnum2,&lnum3,&lnum4);
+		fclose(infile);
+		if (lnum4>jift)
+			num = (int) 100*(((lnum1-jif1)+(lnum2-jif2)+(lnum3-jif3))/(lnum4-jift));
 		else
-			cpu_perc = 0;
-		jif1l=jif1; jif2l=jif2; jif3l=jif3; jiftl=jift;
-		if (cpu_perc > CPU_HI)
-			sprintf(statnext,CPU_HI_STR,cpu_perc);
+			num = 0;
+		jif1=lnum1; jif2=lnum2; jif3=lnum3; jift=lnum4;
+		if (num > CPU_HI)
+			sprintf(statnext,CPU_HI_STR,num);
 		else
-			sprintf(statnext,CPU_STR,cpu_perc);
+			sprintf(statnext,CPU_STR,num);
 		strcat(status,statnext);
 	// Memory use:
-		memfile = fopen(MEM_FILE,"r");
-		fscanf(memfile,"MemTotal: %ld kB\nMemFree: %ld kB\nBuffers: %ld kB\nCached: %ld kB\n",
-			&mtot,&mfree,&mbuff,&mcache);
-		fclose(memfile);
-		sprintf(statnext,MEM_STR,100*mfree/mtot,100*mbuff/mtot,100*mcache/mtot);
+		infile = fopen(MEM_FILE,"r");
+		fscanf(infile,"MemTotal: %ld kB\nMemFree: %ld kB\nBuffers: %ld kB\nCached: %ld kB\n",
+			&lnum1,&lnum2,&lnum3,&lnum4);
+		fclose(infile);
+		sprintf(statnext,MEM_STR,100*lnum2/lnum1,100*lnum3/lnum1,100*lnum4/lnum1);
 		strcat(status,statnext);
 	// Audio volume:
-		audio = fopen(AUD_FILE,"r");
-		fscanf(audio,"%d",&vol);
-		fclose(audio);
-		if (vol == -1)
-			sprintf(statnext,VOL_MUTE_STR,vol);
+		infile = fopen(AUD_FILE,"r");
+		fscanf(infile,"%d",&num);
+		fclose(infile);
+		if (num == -1)
+			sprintf(statnext,VOL_MUTE_STR,num);
 		else
-			sprintf(statnext,VOL_STR,vol);
+			sprintf(statnext,VOL_STR,num);
 		strcat(status,statnext);
 	// Power / Battery:
-		batfile = fopen(BATT_NOW,"r");
-			fscanf(batfile,"%d\n",&bat_now);fclose(batfile);
-		batfile = fopen(BATT_FULL,"r");
-			fscanf(batfile,"%d\n",&bat_full);fclose(batfile);
-		batfile = fopen(BATT_STAT,"r");
-			fscanf(batfile,"%s\n",statnext);fclose(batfile);
-		bat_perc = bat_now*100/bat_full;
+		infile = fopen(BATT_NOW,"r");
+			fscanf(infile,"%ld\n",&lnum1);fclose(infile);
+		infile = fopen(BATT_FULL,"r");
+			fscanf(infile,"%ld\n",&lnum2);fclose(infile);
+		infile = fopen(BATT_STAT,"r");
+			fscanf(infile,"%s\n",statnext);fclose(infile);
+		num = lnum1*100/lnum2;
 		if (strncmp(statnext,"Charging",8) == 0) {
-			sprintf(statnext,BAT_CHRG_STR,bat_perc);
+			sprintf(statnext,BAT_CHRG_STR,num);
 		}
 		else {
-			if (bat_perc < BATT_LOW)
-				sprintf(statnext,BAT_LOW_STR,bat_perc);
+			if (num < BATT_LOW)
+				sprintf(statnext,BAT_LOW_STR,num);
 			else
-				sprintf(statnext,BAT_STR,bat_perc);
+				sprintf(statnext,BAT_STR,num);
 		}
 		strcat(status,statnext);
 	// Date & Time:
