@@ -13,3 +13,11 @@ To remove the dependecy on status colors and terminus2 font, simply remove these
 PS: Audio information is retrieved from a file in my home directory.
 This file is updated by whenever the volume is changed by my XF86Vol* keybindings.
 This is much more efficient that querying the actual volume from alsa every second.
+
+------
+
+EDIT: 2 June 2013
+As I no longer use dwm, I have not done anything with this code in quite some time, and I don't anticipate doing any of the needed improvements.
+
+Anyone interested in implementing a similar status input for dwm should see Unia's great take on this status bar here:
+https://github.com/Unia/dwmst
